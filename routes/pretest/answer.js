@@ -4,9 +4,9 @@ const cookieParser = require('cookie-parser')
 const formidableMiddleware = require('express-formidable');
 const isAuthMiddleware = require('./isAuth');
 const fs = require('fs-extra');
-const crypto = require('crypto');
 const path = require('path');
 const moment = require('moment');
+const monk = require('monk');
 
 const router = express.Router();
 
@@ -18,22 +18,23 @@ router.use(formidableMiddleware({
   keepExtensions : true
 }));
 
-router.post('/submit/file/:problemID', async (req, res, next) => {
+router.post('/submit/file/:problemId', async (req, res, next) => {
   try{
     const form = req.files;
 
-    // check for problemID
+    // check for problemId
+    console.log(req.params.problemId)
     const doc = await res.locals.db.get('Problems').findOne({
-      id : Number(req.params.problemID)
+      _id : monk.id(req.params.problemId)
     })
 
     if ( Object.keys(form).length !== 0 ){
       if ( doc ){
         // insert file path to database
         res.locals.db.get('Answers').insert({
-          firstname : res.locals.firstname,
-          lastname : res.locals.lastname,
-          problemID : req.params.problemID,
+          std : res.locals.std,
+          testId : res.locals.testId,
+          problemId : req.params.problemId,
           filepath : form.userFile.path,
           filetype : form.userFile.type,
           filename : form.userFile.name,
@@ -41,7 +42,7 @@ router.post('/submit/file/:problemID', async (req, res, next) => {
         })
         res.status(200).send('success');
       } else {
-        fs.remove(form.test.path);
+        fs.remove(form.userFile.path);
         res.status(400).json({ error : 'ProblemID not valid' });
       }
     }
@@ -50,24 +51,18 @@ router.post('/submit/file/:problemID', async (req, res, next) => {
   }
 })
 
-router.post('/submit/text/:problemID', async (req, res, next) => {
+router.post('/submit/text/:problemId', async (req, res, next) => {
   try{
     const doc = await res.locals.db.get('Problems').findOne({
-      id : Number(req.params.problemID)
+      _id : monk.id(req.params.problemId)
     })
 
     if ( doc ){
-      const hash = crypto.createHash('sha256');
-      hash.update( res.locals.firstname + res.locals.lastname + req.params.problemID + String(new Date()) );
-      const fname = hash.digest('hex');
-      fs.writeFile( path.join( process.env.UPLOADDIR , fname), req.fields.userText, (err) => {
-        next(err);
-      })
       res.locals.db.get('Answers').insert({
-        firstname : res.locals.firstname,
-        lastname : res.locals.lastname,
-        problemID : req.params.problemID,
-        filepath : path.join( process.env.UPLOADDIR, fname ),
+        std : res.locals.std,
+        testId : res.locals.testId,
+        text : req.fields.userText,
+        problemId : req.params.problemId,
         submittedTime : moment().format()
       })
       res.status(200).send('success');
@@ -79,21 +74,22 @@ router.post('/submit/text/:problemID', async (req, res, next) => {
   }
 })
 
-router.post('/submit/subjective', async (req, res, next) => {
+router.post('/submit/subjective/:sectionId', async (req, res, next) => {
   try {
-    const section = await res.locals.db.get('Sections').findOne({
-      'id' : Number(req.fields.sectionNumber)
-    });
-    
+    let allProblems = [];
+    console.log(req.fields.userAnswer)
+    Object.keys(req.fields.userAnswer).forEach( (_id) => {
+      allProblems.push(monk.id(_id));
+    })
+
     const allAnswers = await res.locals.db.get('Problems').aggregate([
-      { '$match' : {  'id' : { '$in' : section.problemId } } },
-      { '$project' : { 'id' : 1, 'answer' : 1 , '_id' : 0 } }
+      { $match : { _id : { $in : allProblems } } }
     ])
-    
+
     // build object
     let scores = 0; 
     allAnswers.forEach( (record) => {
-      if ( req.fields.userAnswer[String(record['id'])] === Number(record['answer'])){
+      if ( req.fields.userAnswer[String(record['_id'])] === Number(record['answer'])){
         scores += 1;
       }
     })
@@ -101,8 +97,8 @@ router.post('/submit/subjective', async (req, res, next) => {
     // push result to database
     res.locals.db.get('Answers').insert(
       { 
-        firstname : res.locals.firstname,
-        lastname : res.locals.lastname,
+        std : res.locals.std,
+        testId : res.locals.testId,
         submitAnswer : req.fields.userAnswer,
         scores : scores,
         submittedTime : moment().format()

@@ -9,9 +9,9 @@ const router = express.Router();
 router.use(cookieParser());
 router.use(isAuthMiddleware);
 
-router.get('/', (req, res, next) => {
+router.get('/', async (req, res, next) => {
   res.status(200).json({
-    timeLeft : ( process.env.TESTTIMEINHOUR * 60 * 60 ) - res.locals.timeDelta
+    timeLeft : res.locals.timeLeft
   })
 })
 module.exports = router;

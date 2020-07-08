@@ -2,6 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv').config();
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
+const monk = require('monk');
 
 const router = express.Router();
 
@@ -12,9 +13,9 @@ router.put('/',(req, res, next) => {
     if (err){
       res.status(401).json({ err : 'token invalid' });
     } else {
-      res.locals.db.get('Login').findOneAndUpdate({
-        firstname : decoded.firstname,
-        lastname : decoded.lastname
+      res.locals.db.get('Logins').findOneAndUpdate({
+        std : decoded.std,
+        testId : monk.id(decoded.testId)
       },
         {
           $set : { isSubmit : true }
