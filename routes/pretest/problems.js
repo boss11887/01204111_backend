@@ -2,6 +2,7 @@ const dotenv = require('dotenv').config()
 const express = require('express');
 const isAuthMiddleware = require('./isAuth');
 const monk = require('monk');
+const moment = require('moment');
 
 const router = express.Router()
 
@@ -21,11 +22,18 @@ function getRandom(arr, n) {
     return result;
 }
 
-router.get('/list', async (req, res, next) => {
+router.get('/list/:testId', async (req, res, next) => {
   try {
     const curTest = await res.locals.db.get('Tests').findOne({
-      testName : process.env.TESTNAME
+      _id : monk.id(req.params.testId)
     })
+
+    if ( !curTest || moment().isAfter(moment(curTest.endTime)) || moment().isBefore(moment(curTest.startTime)) ) {
+      res.status(400).json({
+        err : 'testId is invalid'
+      })
+    }
+
     let objectIds = [];
     curTest.sectionId.forEach( (item) =>{
       objectIds.push(monk.id(item))
@@ -44,13 +52,15 @@ router.get('/list', async (req, res, next) => {
     allSections.forEach( (section) => {
       section.sectionProblems = getRandom(section.sectionProblems,section.size)
     })
+
+    res.locals.testId = req.params.testId;
     res.status(200).json({
       sections : allSections
     })
 
 
   } catch (err) {
-    res.status(500).json({ error : 'Error occure' });
+    res.status(500).json({ err : 'Internal Error' });
     next(err);
   }
 })
@@ -60,7 +70,6 @@ router.get('/content/:problemId', async (req, res, next) => {
     const doc = await res.locals.db.get('Problems').findOne({
       _id : monk.id(req.params.problemId)
     })
-    console.log(doc)
     if ( !doc ){
       res.status(400).json({
         err : 'invalid problemId'

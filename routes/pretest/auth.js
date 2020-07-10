@@ -3,9 +3,8 @@ const bodyparser = require('body-parser')
 const cookieParser = require('cookie-parser')
 const jwt = require('jsonwebtoken')
 const dotenv = require('dotenv').config()
-const moment = require('moment');
 const crypto = require('crypto');
-const monk = require('monk')
+const monk = require('monk');
 
 const router = express.Router()
 
@@ -38,46 +37,53 @@ router.post('/login', async (req,res,next) => {
     if ( !valid_user ){
       res.status(401).json({ err : 'invalid user' })
     }
-      
-    // get current testId
-    const curTest = await res.locals.db.get('Tests').findOne({
-      testName : process.env.TESTNAME
-    })
 
-    // get_login
-    const latestLogin = await res.locals.db.get('Logins').findOne({
-      std : std,
-      testId : monk.id(curTest._id)
-    })
-
-    const loginTime = latestLogin ? moment(latestLogin.loginTime) : moment()
-    const isValidTime = Math.floor(
-      ( moment().valueOf() - loginTime.valueOf()) / 1000
-    ) < curTest.testTimeInSecond
-
-    // check if login is valid
-    if ( !isValidTime ){
-      res.status(401).json({ err : "timeout" });
-    }
-    else if ( latestLogin && latestLogin.isSubmit ){
-      res.status(401).json({ err : 'test finish' })
-    }
-    if ( isValidTime ){
-      if ( !latestLogin ){
-        res.locals.db.get('Logins').insert({
-          std,
-          testId : curTest._id,
-          loginTime : moment().format(),
-          isSubmit : false
-        })
-      }
-      const private_key = process.env.PRIVATE_KEY;
-      const payload = { std, testId : curTest._id };
-      const token = jwt.sign(payload, private_key);
-      res.cookie('token',token).status(200).send('success');
-    }  
+    const private_key = process.env.PRIVATE_KEY;
+    const payload = { std }
+    const token = jwt.sign(payload, private_key);
+    res.cookie('token',token).status(200).send('success');
   } catch(err) {
     next(err);
+  }
+})
+
+router.post('/start_test/:testId', async (req, res, next) => {
+  try{
+    console.log(req.cookies)
+    const decoded = jwt.verify(req.cookies.token, process.env.PRIVATE_KEY)
+
+    const doc = res.locals.db.get('Tests').findOne({
+      '_id' : req.params.testId
+    })
+
+    if ( !doc ){
+      res.status(400).json({
+        err : 'invalid testId'
+      })
+    }
+
+    if ( !decoded ){
+      res.status(401).json({
+        err : 'token invalid'
+      })
+    }
+
+    res.locals.db.get('Logins').insert({
+      'std' : decoded.std,
+      'testId' : monk.id(req.params.testId),
+      'loginTime' : new Date(),
+      'isSubmit' : false
+    })
+
+    const payload = {
+      'std' : decoded.std,
+      'testId' : req.params.testId
+    }
+
+    token = jwt.sign(payload, process.env.PRIVATE_KEY)
+    res.cookie('token',token).status(200).send('success')
+  } catch(err) {
+    next(err)
   }
 })
 
