@@ -3,11 +3,20 @@ from pymongo import MongoClient
 from pymongo.collection import ReturnDocument
 from os import path, getcwd, walk
 from copy import deepcopy
-from dotenv import load_dotenv
 import re
 
 
-db = MongoClient('mongodb://localhost:27017')['01204111_website']
+db = MongoClient('localhost:27017')['01204111_website']
+
+# with open('/home/saito/secret/01204111_website.env') as f:
+    # username = f.read().splitlines()[0]
+    # password = f.read().splitlines()[1]
+    # db = MongoClient('localhost:27017',
+                     # username = username,
+                     # password = password,
+                     # authSource = '01204111_website',
+                     # authMechanism='SCRAM-SHA-1'
+                     # )
 
 def allProblemsReader(fpath, sectionType):
     col = db.Problems
@@ -108,10 +117,19 @@ def indexReader():
 if __name__ == '__main__':
     testName = input("Enter test name : ")
     testTimeInSecond = int(input("Test time in seconds : "))
+    startTime = input('Start test time format (%Y-%m-%d %H:%M) : ')
+    endTime = input('End test time format (%Y-%m-%d %H:%M) : ')
+
+    startTime = datetime.strptime(startTime,"%Y-%m-%d %H:%M")
+    endTime = datetime.strptime(endTime,"%Y-%m-%d %H:%M")
+    
+    startTime = datetime.utcfromtimestamp(startTime.timestamp())
+    endTime = datetime.utcfromtimestamp(endTime.timestamp())
     _id = indexReader()
     db.Tests.insert_one({
         'testName' : testName,
         'testTimeInSecond' : testTimeInSecond,
-        'date' : datetime.utcnow(),
+        'startTime' : startTime,
+        'endTime' : endTime,
         'sectionId' : _id
     })
