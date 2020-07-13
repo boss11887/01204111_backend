@@ -14,7 +14,7 @@ router.use( async (req, res, next) => {
         err : 'token invalid'
       })
     } 
-    next()
+    next();
   }
 )
 

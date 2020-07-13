@@ -68,12 +68,20 @@ router.post('/start_test/:testId', async (req, res, next) => {
       })
     }
 
-    res.locals.db.get('Logins').insert({
+    const login = await res.locals.db.get('Logins').findOne({
       'std' : decoded.std,
       'testId' : monk.id(req.params.testId),
-      'loginTime' : new Date(),
-      'isSubmit' : false
     })
+
+    if ( !login ){
+      res.locals.db.get('Logins').insert({
+        'std' : decoded.std,
+        'testId' : monk.id(req.params.testId),
+        'loginTime' : new Date(),
+        'isSubmit' : false,
+        'IP' : req.headers["X-Real-IP"]
+      })
+    }
 
     const payload = {
       'std' : decoded.std,

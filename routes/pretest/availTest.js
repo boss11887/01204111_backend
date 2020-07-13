@@ -7,7 +7,8 @@ const router = express.Router();
 router.use(isLogin);
 
 router.get('/list', async (req, res, next) => {
-    let curTime = moment().toDate()
+    const curTime = moment().toDate()
+    console.log(curTime);
     const allTests = await res.locals.db.get('Tests').aggregate([
       { 
         $match :  { $and : [
@@ -21,6 +22,7 @@ router.get('/list', async (req, res, next) => {
       allTestsId[record._id] = {};
       allTestsId[record._id]['name'] = record.testName;
       allTestsId[record._id]['isSubmit'] = false;
+      allTestsId[record._id]['endTime'] = moment(record.endTime).format('MMMM Do YYYY, h:mm a');
     } )
 
     const Login = await res.locals.db.get('Logins').aggregate([
