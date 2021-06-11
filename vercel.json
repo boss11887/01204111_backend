@@ -1,0 +1,22 @@
+{
+    "version": 2,
+    "builds": [
+      {
+        "src": "index.js",
+        "use": "@now/node"
+      }
+    ],
+    "routes": [
+      {
+            "src": "/.*",
+            "dest": "/"
+        }
+    ],
+    "env": {
+    "PRIVATE_KEY":"$private_key",
+    "UPLOADDIR":"/data",
+    "TESTTIMEINHOUR":"1",
+    "CORSORIGIN":"https://stupefied-albattani-2b27b6.netlify.app/",
+    "DBURL":"mongodb+srv://booss11887:wYrT7uqosDmQKzHI@cluster.fqamf.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+  }
+}
