@@ -1,21 +1,21 @@
-const express = require('express');
-const cookieParser = require('cookie-parser');
-const jwt = require('jsonwebtoken');
+const express = require('express')
+const cookieParser = require('cookie-parser')
+const jwt = require('jsonwebtoken')
 
-const router = express.Router();
+const router = express.Router()
 
-router.use(cookieParser());
+router.use(cookieParser())
 
-router.use( async (req, res, next) => {
+router.use(async (req, res, next) => {
     const decoded = jwt.verify(req.cookies.token, process.env.PRIVATE_KEY)
 
-    if ( !decoded ){
-      res.status(401).json({
-        err : 'token invalid'
-      })
-    } 
-    next();
-  }
-)
+    if (!decoded) {
+        res.status(401).json({
+            err: 'token invalid'
+        })
+    }
 
-module.exports = router;
+    next()
+})
+
+module.exports = router
