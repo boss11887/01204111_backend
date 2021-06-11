@@ -17,6 +17,6 @@
     "UPLOADDIR":"/data",
     "TESTTIMEINHOUR":"1",
     "CORSORIGIN":"https://stupefied-albattani-2b27b6.netlify.app",
-    "DBURL":"mongodb+srv://booss11887:wYrT7uqosDmQKzHI@cluster.fqamf.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+    "DBURL":"mongodb+srv://booss11887:wYrT7uqosDmQKzHI@cluster.fqamf.mongodb.net/pretest?retryWrites=true&w=majority"
   }
 }
