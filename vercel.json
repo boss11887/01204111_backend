@@ -17,6 +17,6 @@
     "UPLOADDIR":"/data",
     "TESTTIMEINHOUR":"1",
     "CORSORIGIN":"https://stupefied-albattani-2b27b6.netlify.app",
-    "DBURL":"mongodb+srv://booss11887:wYrT7uqosDmQKzHI@cluster.fqamf.mongodb.net/pretest?retryWrites=true&w=majority"
+    "DBURL":"mongodb://booss11887:wYrT7uqosDmQKzHI@cluster-shard-00-00.fqamf.mongodb.net:27017,cluster-shard-00-01.fqamf.mongodb.net:27017,cluster-shard-00-02.fqamf.mongodb.net:27017/pretest?ssl=true&replicaSet=atlas-qycdnr-shard-0&authSource=admin&retryWrites=true&w=majority"
   }
 }
